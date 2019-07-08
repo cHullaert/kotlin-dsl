@@ -1,19 +1,24 @@
 package com.darwinit.annotation.autodsl.generator
 
-import com.darwinit.annotation.autodsl.*
+import com.darwinit.annotation.autodsl.Builder
+import com.darwinit.annotation.autodsl.check.isAutoDslObjectCollection
+import com.darwinit.annotation.autodsl.definition.getDefaultValue
+import com.darwinit.annotation.autodsl.definition.javaToKotlinType
+import com.darwinit.annotation.autodsl.getClassname
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import javax.annotation.processing.Messager
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.ClassName
+import javax.tools.Diagnostic
 
 class BuilderGenerator(
     clazz: TypeElement,
     fields: Iterable<VariableElement>,
-    clazzList: Iterable<Element>
+    clazzList: Iterable<Element>,
+    val processingEnvMessager: Messager
 ): AbstractGenerator(clazz, fields, clazzList) {
-
     private fun createBuilderType(): TypeSpec {
         val builder=TypeSpec.classBuilder(BUILDER_CLASS_PATTERN.format(clazz.simpleName.toString()))
             .addAnnotation(Builder::class)
@@ -66,7 +71,22 @@ class BuilderGenerator(
 
         return fields
             .map {
+            processingEnvMessager.printMessage(
+                Diagnostic.Kind.NOTE,
+                "createProperties fields[index]: %s %s".format(
+                    it.asType().toString(),
+                    it.asType().asTypeName().toString()
+                )
+            )
+
             val typeName = it.javaToKotlinType().copy(nullable = it.javaToKotlinType().isNullable)
+
+            processingEnvMessager.printMessage(
+                Diagnostic.Kind.NOTE,
+                "createProperties fields[index] typeName : %s".format(
+                    typeName.toString()
+                )
+            )
 
             val transformer = this.options.transformers.find {
                 transformer ->  typeName==transformer.sourceClass.getClassname()
@@ -91,12 +111,21 @@ class BuilderGenerator(
                     .addModifiers(modifier)
                     .build()
             }
-            else
-            PropertySpec.builder(it.simpleName.toString(), typeName)
+            else {
+                processingEnvMessager.printMessage(
+                    Diagnostic.Kind.NOTE,
+                    "createProperties else: %s   %s".format(
+                        it.simpleName.toString(),
+                        typeName.toString()
+                    )
+                )
+
+                PropertySpec.builder(it.simpleName.toString(), typeName)
                     .mutable()
                     .initializer(it.javaToKotlinType().getDefaultValue().toString())
                     .addModifiers(modifier)
                     .build()
+            }
         }.asIterable()
     }
 
@@ -105,17 +134,8 @@ class BuilderGenerator(
     }
 
     private fun isAutoDslObject(field: VariableElement): Boolean {
-        val value=this.clazzList.find { field.javaToKotlinType() == it.javaToKotlinType() }
+        val value = getAutoDslObject(field)
         return value!=null
-    }
-
-    private fun isAutoDslObjectCollection(field: VariableElement): Boolean {
-        var type=field.asType().asTypeName()
-        if (type is ParameterizedTypeName) {
-            return type.typeArguments[0].javaToKotlinType() as ClassName!=ClassName("kotlin", "String")
-        }
-
-        return false
     }
 
     override fun build(): FileSpec {

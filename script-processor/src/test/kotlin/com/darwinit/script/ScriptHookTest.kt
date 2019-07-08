@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
-class HookTest {
+class ScriptHookTest {
 
     private fun clearFile(input: String): String {
         return input.replace(" ", "").replace("\n", "")

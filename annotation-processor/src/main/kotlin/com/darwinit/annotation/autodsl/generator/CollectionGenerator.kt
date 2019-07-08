@@ -1,27 +1,29 @@
 package com.darwinit.annotation.autodsl.generator
 
-import com.darwinit.annotation.autodsl.getClassname
-import com.darwinit.annotation.autodsl.javaToKotlinType
-import com.squareup.kotlinpoet.FileSpec
-import javax.lang.model.element.VariableElement
-import com.darwinit.annotation.autodsl.*
+import com.darwinit.annotation.autodsl.check.isAutoDslObjectCollection
+import com.darwinit.annotation.autodsl.definition.javaToKotlinType
 import com.squareup.kotlinpoet.*
-import javax.lang.model.element.Element
-import javax.lang.model.element.TypeElement
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.ClassName
+import javax.annotation.processing.Messager
+import javax.lang.model.element.VariableElement
 
 
-class CollectionGenerator(private val packageName: String, private val fields: List<VariableElement>) {
+class CollectionGenerator(
+    private val packageName: String,
+    private val fields: List<VariableElement>,
+    val processingEnvMessager: Messager
+) {
 
     fun build(): FileSpec {
         val builder=FileSpec.builder(packageName,
                                     "CollectionWrapper")
 
-        fields.distinctBy {
+        fields/*.distinctBy {
+            TODO("Detect field by type not name,
+                for fields in differents class with same name and not same field type")
             it.simpleName.toString()
-        }.filter {
-            isAutoDslObjectCollection(it)
+        }*/.filter {
+            isAutoDslObjectCollection(it, processingEnvMessager)
         }.forEach {
             builder.addType(createCollectionType(it))
         }
@@ -52,14 +54,5 @@ class CollectionGenerator(private val packageName: String, private val fields: L
             .superclass(newParameterizedTypeName)
             .addFunction(buildFunction(field))
             .build()
-    }
-
-    private fun isAutoDslObjectCollection(field: VariableElement): Boolean {
-        var type=field.asType().asTypeName()
-        if (type is ParameterizedTypeName) {
-            return type.typeArguments[0].javaToKotlinType() as ClassName!=ClassName("kotlin", "String")
-        }
-
-        return false
     }
 }

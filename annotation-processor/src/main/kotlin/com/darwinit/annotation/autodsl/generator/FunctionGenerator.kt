@@ -1,6 +1,6 @@
 package com.darwinit.annotation.autodsl.generator
 
-import com.darwinit.annotation.autodsl.javaToKotlinType
+import com.darwinit.annotation.autodsl.definition.javaToKotlinType
 import com.squareup.kotlinpoet.*
 import javax.lang.model.element.Element
 import javax.lang.model.element.TypeElement

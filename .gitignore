@@ -101,7 +101,10 @@ gradle-app.setting
 *.iws
 /data
 
-/out/
 Makefile
 subprojects/build
 /.cover_debug
+
+annotation-autodsl/out/
+annotation-processor/out/
+script-processor/out/
