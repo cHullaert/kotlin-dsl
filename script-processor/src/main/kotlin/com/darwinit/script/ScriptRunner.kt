@@ -63,9 +63,10 @@ class ScriptRunner(private val script: Script? = null,
 
         if(options.contains(Option.GENERATE_MAIN)) {
             current = current.split("\n")
-                                .drop(1)
-                                .dropLast(2)
-                                .joinToString("\n")
+                .drop(1)
+                .dropLast(2)
+                .map { it.removePrefix("    ") }
+                .joinToString("\n")
         }
 
         return script!!.dependencies.map {

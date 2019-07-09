@@ -1,14 +1,17 @@
 package com.darwinit.script
 
+import com.darwinit.script.person.Person
 import org.assertj.core.api.Assertions.assertThat
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtScript
 import org.junit.jupiter.api.Test
 import java.io.File
+import java.util.*
 
 class ScriptRunnerTest {
-
     @Test
     fun ScriptRunnerTest() {
-        val inputStream = File("src/test/resources/hook-after.kt").inputStream()
+        val inputStream = File("src/test/resources/dsl/person.txt").inputStream()
 
         val scriptHooks = mutableListOf(
             ScriptHook(
@@ -20,13 +23,11 @@ class ScriptRunnerTest {
             )
         )
 
-        val container = mutableListOf<Any>()
-
         val scriptRunner = ScriptRunner(
             ScriptRunner.Script(
                 inputStream,
                 listOf(
-                    ScriptRunner.Dependency("com.darwinit.annotation.demo.*")
+                    ScriptRunner.Dependency("com.darwinit.script.person.*")
                 )
             ),
             scriptHooks,
@@ -35,15 +36,25 @@ class ScriptRunnerTest {
 
         assertThat(scriptRunner).isInstanceOf(ScriptRunner::class.java)
 
+        val container = mutableListOf<Person>()
+
+        var scriptRunnerVariable = ScriptRunner.Variable(
+            "container",
+            "MutableList<Any>",
+            container
+        )
+
+        assertThat(scriptRunnerVariable).isInstanceOf(ScriptRunner.Variable::class.java)
+
+        // TODO("Mock engine: ScriptEngine")
+
         scriptRunner.run(listOf(
-            ScriptRunner.Variable(
-                "container",
-                "MutableList<Any>",
-                container
-            )
+            scriptRunnerVariable
         ))
 
         assertThat(container).hasSize(1)
+        assertThat(container[0].name).isEqualTo("name1")
+        assertThat(container[0].uuid).isEqualTo(UUID.fromString("709fab36-de23-49be-b95d-ad3a60659955"))
     }
 
 }
