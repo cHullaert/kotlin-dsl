@@ -9,10 +9,7 @@ import javax.annotation.processing.Processor
 import javax.annotation.processing.RoundEnvironment
 import javax.annotation.processing.SupportedOptions
 import javax.lang.model.SourceVersion
-import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
+import javax.lang.model.element.*
 import javax.lang.model.util.ElementFilter
 import javax.tools.Diagnostic
 
@@ -29,7 +26,7 @@ class AutoDslProcessor: AbstractProcessor() {
     }
 
     private fun getFields(typeElement: TypeElement): List<VariableElement> {
-        val fields = ElementFilter.fieldsIn(typeElement.enclosedElements)
+        val fields = ElementFilter.fieldsIn(typeElement.enclosedElements.filter { !it.modifiers.contains(Modifier.TRANSIENT) } )
         if(typeElement.superclass != null) {
             val superElement=processingEnv.typeUtils.asElement(typeElement.superclass)
             if(superElement != null) {
