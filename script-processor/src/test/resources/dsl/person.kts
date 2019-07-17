@@ -1,4 +1,6 @@
-/* dfdsfsdfsdf */
+package com.darwinit.dsl
+
+import com.darwinit.script.person.*
 
 person {
     name= "name1"

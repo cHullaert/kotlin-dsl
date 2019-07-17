@@ -11,7 +11,7 @@ import java.util.*
 class ScriptRunnerTest {
     @Test
     fun ScriptRunnerTest() {
-        val inputStream = File("src/test/resources/dsl/person.txt").inputStream()
+        val inputStream = File("src/test/resources/dsl/person.kts").inputStream()
 
         val scriptHooks = mutableListOf(
             ScriptHook(

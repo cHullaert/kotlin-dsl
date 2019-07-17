@@ -48,6 +48,7 @@ class ScriptRunner(private val script: Script? = null,
     private fun clean(script: String): String {
         return script.split("\n")
             .filterNot { it.trim().startsWith("import") }
+            .filterNot { it.trim().startsWith("package") }
             .joinToString("\n")
     }
 
