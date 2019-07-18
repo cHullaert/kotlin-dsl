@@ -3,6 +3,7 @@ package com.darwinit.annotation.autodsl.definition
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import javax.lang.model.element.Element
+import javax.lang.model.element.TypeElement
 import kotlin.reflect.jvm.internal.impl.builtins.jvm.JavaToKotlinClassMap
 import kotlin.reflect.jvm.internal.impl.name.FqName
 
@@ -11,12 +12,17 @@ val primitiveTypes = hashSetOf(
     ClassName("kotlin", "Int")
 )
 
+fun Element.IsIntArray(): Boolean {
+    return asType().asTypeName() == IntArray::class.java.asTypeName()
+}
+
 fun Element.javaToKotlinType(): TypeName =
     asType().asTypeName().javaToKotlinType()
 
-
 fun TypeName.javaToKotlinType(): TypeName {
-    return if (this is ParameterizedTypeName) {
+    return if (this == IntArray::class.java.asTypeName()) {
+        IntArray::class.asTypeName()
+    } else if (this is ParameterizedTypeName) {
         val className = rawType.javaToKotlinType() as ClassName
 
         className.parameterizedBy(*typeArguments.map { it.javaToKotlinType() }.toTypedArray())
@@ -33,19 +39,21 @@ fun TypeName.javaToKotlinType(): TypeName {
     }
 }
 
-fun TypeName.getDefaultValue(): Any? {
-    if(this.isNullable)
+fun Element.getDefaultValue(): Any? {
+    val kotlinTypeName = this.javaToKotlinType()
+
+    if (kotlinTypeName.isNullable)
         return null
 
-    when(this) {
+    when (kotlinTypeName) {
         ANY -> return "???any"
-        ARRAY ->  return "???array"
-        UNIT ->  return "???unit"
-        BOOLEAN ->  return "false"
+        ARRAY -> return "???array"
+        UNIT -> return "???unit"
+        BOOLEAN -> return "false"
         BYTE,
         SHORT,
         INT,
-        LONG ->  return "0"
+        LONG -> return "0"
         CHAR -> return "''"
         FLOAT,
         DOUBLE -> return "0.0"
@@ -53,11 +61,15 @@ fun TypeName.getDefaultValue(): Any? {
         ClassName("kotlin", "String") -> return "\"\""
     }
 
-    if(this.toString().startsWith("kotlin.Array"))
+    if (kotlinTypeName.toString().startsWith("kotlin.Array"))
         return "Array<kotlin.Int>(3){0}"
 
-    if(this.toString().startsWith("kotlin.collections."))
+    if (kotlinTypeName.toString().startsWith("kotlin.collections."))
         return "emptyList()"
 
-    return "%s()".format(this.toString())
+    if (this.IsIntArray()) {
+        return "IntArray(0)"
+    }
+
+    return "%s()".format(kotlinTypeName.toString())
 }

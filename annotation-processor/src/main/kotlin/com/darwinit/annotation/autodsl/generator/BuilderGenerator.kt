@@ -2,15 +2,15 @@ package com.darwinit.annotation.autodsl.generator
 
 import com.darwinit.annotation.autodsl.Builder
 import com.darwinit.annotation.autodsl.check.isAutoDslObjectCollection
+import com.darwinit.annotation.autodsl.definition.IsIntArray
 import com.darwinit.annotation.autodsl.definition.getDefaultValue
 import com.darwinit.annotation.autodsl.definition.javaToKotlinType
 import com.darwinit.annotation.autodsl.getClassname
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import javax.annotation.processing.Messager
-import javax.lang.model.element.Element
-import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
+import javax.lang.model.element.*
+import javax.lang.model.util.ElementFilter
 import javax.tools.Diagnostic
 
 class BuilderGenerator(
@@ -68,7 +68,6 @@ class BuilderGenerator(
     }
 
     private fun createProperties(): Iterable<PropertySpec> {
-
         return fields
             .map {
             processingEnvMessager.printMessage(
@@ -122,7 +121,7 @@ class BuilderGenerator(
 
                 PropertySpec.builder(it.simpleName.toString(), typeName)
                     .mutable()
-                    .initializer(it.javaToKotlinType().getDefaultValue().toString())
+                    .initializer(it.getDefaultValue().toString())
                     .addModifiers(modifier)
                     .build()
             }
